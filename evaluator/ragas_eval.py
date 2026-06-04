@@ -24,9 +24,16 @@ from ragas.run_config import RunConfig
 ragas_run_config = RunConfig(timeout=3000, max_workers=1)
 
 # Override RAGAS to use local Ollama + HuggingFace
+import torch
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"RAGAS evaluation using device: {device}")
+
 ragas_llm = LangchainLLMWrapper(Ollama(model="llama3.2", temperature=0, timeout=3000.0))
 ragas_emb = LangchainEmbeddingsWrapper(
-    HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_kwargs={"device": device}
+    )
 )
 
 RESULTS_DIR = str(Path(__file__).parent.parent / "results")
