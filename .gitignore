@@ -1,0 +1,5 @@
+﻿chunking/
+data/
+results/
+vectorstores/
+__pycache__/
