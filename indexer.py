@@ -1,9 +1,14 @@
 # indexer.py
 import time
+import torch
 import chromadb
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from pathlib import Path
+
+# Auto-detect GPU — works whether CUDA torch is installed or not
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"[Device] Using: {DEVICE}" + (f" ({torch.cuda.get_device_name(0)})" if DEVICE == "cuda" else " (no CUDA torch)"))
 
 # ── Config ──────────────────────────────────────────────────────────────────
 VECTORSTORE_DIR = "vectorstores"
@@ -26,11 +31,11 @@ def get_embedding_model():
     all-MiniLM-L6-v2: small (80MB), fast, 384-dim output.
     Perfect for local benchmarking.
     """
-    print(f"Loading embedding model: {EMBED_MODEL}")
+    print(f"Loading embedding model: {EMBED_MODEL} on {DEVICE}")
     embeddings = HuggingFaceEmbeddings(
         model_name=EMBED_MODEL,
-        model_kwargs={"device": "cpu"},   # change to "cuda" if you have GPU
-        encode_kwargs={"normalize_embeddings": True},  # needed for cosine similarity
+        model_kwargs={"device": DEVICE},
+        encode_kwargs={"normalize_embeddings": True, "batch_size": 64},
     )
     print("  Embedding model ready.")
     return embeddings

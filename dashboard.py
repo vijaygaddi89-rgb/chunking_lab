@@ -468,8 +468,8 @@ with tab_playground:
     ground_truth_ans = ""
     
     if query_mode == "Select from Evaluation Golden Set":
-        # Load questions 1-10 which are evaluated in raw_results.json
-        q_options = QUESTIONS[:10]
+        # Load all 40 evaluated questions from raw_results.json
+        q_options = QUESTIONS
         q_idx = st.selectbox("Choose a Question", range(len(q_options)), format_func=lambda x: f"Q{x+1}: {q_options[x]}")
         selected_question = q_options[q_idx]
         ground_truth_ans = GROUND_TRUTHS[q_idx]

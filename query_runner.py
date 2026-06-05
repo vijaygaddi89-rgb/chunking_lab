@@ -68,7 +68,9 @@ def run_single_query(retriever, llm, question: str) -> dict:
     }
 
 
-# ── Run all 50 questions for one strategy ────────────────────────────────────
+# ── Run all 40 questions for one strategy ────────────────────────────────────
+N_QUESTIONS = len(QUESTIONS)   # 40 questions
+
 def run_strategy(strategy_name: str, retriever, llm) -> list:
     """
     Returns a list of result dicts — one per question.
@@ -76,8 +78,8 @@ def run_strategy(strategy_name: str, retriever, llm) -> list:
     print(f"\n── Running: {strategy_name} ──────────────────")
     results = []
 
-    for i, (question, ground_truth) in enumerate(zip(QUESTIONS[:10], GROUND_TRUTHS[:10])):
-        print(f"  Q{i+1:02d}/10: {question[:60]}...")
+    for i, (question, ground_truth) in enumerate(zip(QUESTIONS, GROUND_TRUTHS)):
+        print(f"  Q{i+1:02d}/{N_QUESTIONS}: {question[:60]}...")
 
         result = run_single_query(retriever, llm, question)
         result.update({

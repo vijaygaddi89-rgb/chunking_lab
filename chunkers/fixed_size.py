@@ -83,10 +83,13 @@ class FixedSizeChunker:
 # Quick test
 if __name__ == "__main__":
     import sys
-    sys.path.append('..')
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from loader import load_document, clean_documents
     
-    pages = load_document(r"C:\Users\gaddi\Desktop\chunking_lab\data\document.pdf")
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    pdf_path = os.path.join(base_dir, "data", "document.pdf")
+    pages = load_document(pdf_path)
     pages = clean_documents(pages)
     
     chunker = FixedSizeChunker(chunk_size=500, chunk_overlap=50)

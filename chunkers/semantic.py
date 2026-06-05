@@ -21,6 +21,8 @@ class SemanticChunker:
         Minimum sentences per chunk (default: 2)
     max_chunk_size : int
         Safety limit to prevent huge chunks (default: 3000)
+    device : str
+        Device for SentenceTransformer inference: 'cuda' or 'cpu' (default: 'cuda')
     """
     
     def __init__(
@@ -28,16 +30,19 @@ class SemanticChunker:
         model_name: str = "all-MiniLM-L6-v2",
         similarity_threshold: float = 0.5,
         min_sentences: int = 2,
-        max_chunk_size: int = 3000
+        max_chunk_size: int = 3000,
+        device: str = "cuda"
     ):
+        import torch
         self.model_name = model_name
         self.similarity_threshold = similarity_threshold
         self.min_sentences = min_sentences
         self.max_chunk_size = max_chunk_size
+        self.device = device if torch.cuda.is_available() else "cpu"
         
-        print(f"🔄 Loading model: {model_name}")
-        self.model = SentenceTransformer(model_name)
-        print("✅ Model loaded!")
+        print(f"[*] Loading SemanticChunker model: {model_name} on {self.device}")
+        self.model = SentenceTransformer(model_name, device=self.device)
+        print("[OK] SemanticChunker model loaded!")
     
     def _split_into_sentences(self, text: str) -> List[str]:
         """Split text into sentences (simple regex approach)."""
@@ -47,8 +52,13 @@ class SemanticChunker:
         return [s.strip() for s in sentences if s.strip() and len(s.strip()) > 10]
     
     def _compute_embeddings(self, sentences: List[str]) -> np.ndarray:
-        """Compute embeddings for all sentences."""
-        return self.model.encode(sentences, show_progress_bar=False)
+        """Compute embeddings for all sentences (runs on GPU if available)."""
+        return self.model.encode(
+            sentences,
+            show_progress_bar=False,
+            batch_size=64,          # larger batch = faster on GPU
+            convert_to_numpy=True,
+        )
     
     def _compute_similarities(self, embeddings: np.ndarray) -> List[float]:
         """Compute cosine similarity between consecutive sentences."""
@@ -147,12 +157,14 @@ class SemanticChunker:
 
 
 if __name__ == "__main__":
-
     import sys
-    sys.path.append("../")
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from loader import load_document, clean_documents
     
-    pages = load_document(r"C:\Users\gaddi\Desktop\chunking_lab\data\document.pdf")
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    pdf_path = os.path.join(base_dir, "data", "document.pdf")
+    pages = load_document(pdf_path)
     pages = clean_documents(pages)
     
     chunker = SemanticChunker(
@@ -161,7 +173,7 @@ if __name__ == "__main__":
     )
     chunks = chunker.split_documents(pages)
     
-    print(f"\n📊 Semantic Results:")
+    print(f"\nSemantic Results:")
     print(f"  Total chunks : {len(chunks)}")
     lengths = [len(c.page_content) for c in chunks]
     print(f"  Avg length  : {sum(lengths) // len(lengths)} chars")
